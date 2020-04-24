@@ -3,14 +3,11 @@
  */
 
 const debug       = require("debug")("api:events"),
-      express     = require("express"),
-      {promisify} = require("util");
+      express     = require("express");
 
 const config = require("../../config");
 
 const router = express.Router();
-
-const get = promisify(config.redis.get).bind(config.redis);
 
 const EVENT_ID_PATTERN = RegExp('^[0-9]*-[0-9]*$');
 
@@ -22,21 +19,13 @@ router.get('/:eventid', async (req, res) => {
         return res.status(404).send({msg: `Invalid event id`}).end();
     }
 
-    let event = await get(`evn:${eventid}`);
+    const store  = await config.dataStore.getStore();
+    let event = await store.event.get(eventid);
     if(!event) {
         return res.status(404).send({msg: `Event ID ${eventid} not found`}).end();
     }
-    event = JSON.parse(event);
 
-    let blockNumber = event.id.split("-")[0];
-    let block       = await get(`block:${blockNumber}`);
-    block           = JSON.parse(block);
-
-    return res.status(200).send({
-        ...event,
-        blockNumber: blockNumber,
-        timestamp: block.timestamp,
-    }).end();
+    return res.status(200).send(event).end();
 });
 
 module.exports = router;

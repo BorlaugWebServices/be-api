@@ -1,6 +1,8 @@
-const nconf    = require("nconf"),
-      path     = require("path"),
-      jayson   = require("jayson/promise");
+const nconf  = require("nconf"),
+      path   = require("path"),
+      jayson = require("jayson/promise");
+
+const Store = require("be-datastore");
 
 let configPath = path.join(__dirname, '../config');
 nconf.env().argv();
@@ -23,7 +25,7 @@ const subscriber = new RedisClustr({
         return RedisClient.createClient(port, host);
     }
 });
-const watcher    = jayson.client.http(nconf.get('watcher'));
+const harvester  = jayson.client.http(nconf.get('harvester'));
 
 client.on('error', (error) => {
     console.error('Client', error.message);
@@ -54,4 +56,13 @@ client.on('fullReady', () => {
 module.exports            = nconf;
 module.exports.redis      = client;
 module.exports.subscriber = subscriber;
-module.exports.watcher    = watcher;
+module.exports.harvester  = harvester;
+module.exports.dataStore      =  {
+    store: null,
+    getStore: async function(){
+        if(!this.store){
+            this.store = await Store.DataStore(nconf.get('db:type'),nconf.get('db:url'),nconf.get('cache:redisHosts'),nconf.get('cache:redisPorts'));
+        }
+        return this.store;
+    }
+};

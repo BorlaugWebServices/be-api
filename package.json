@@ -14,6 +14,7 @@
   "author": "BWS",
   "license": "ISC",
   "dependencies": {
+    "be-datastore": "file:../be-datastore",
     "body-parser": "^1.19.0",
     "bufferutil": "^4.0.1",
     "cors": "^2.8.5",
@@ -29,6 +30,7 @@
     "redis-clustr": "^1.7.0",
     "socket.io": "^2.3.0",
     "utf-8-validate": "^5.0.2",
+    "watcher": "file:../be-harvester",
     "ws": "^7.2.1"
   }
 }
