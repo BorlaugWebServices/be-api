@@ -30,4 +30,4 @@ router.get('/:txhash', async (req, res) => {
     return res.status(200).send(transaction).end();
 });
 
-module.exports.router = router;
+module.exports = router;

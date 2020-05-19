@@ -21,11 +21,11 @@ const blocks       = require("./routes/blocks"),
 
 app.use("/", require("./routes"));
 app.use("/search", require("./routes/search"));
-app.use("/blocks", blocks.router);
-app.use("/transactions", transactions.router);
+app.use("/blocks", blocks);
+app.use("/transactions", transactions);
 app.use("/inherents", inherents);
 app.use("/events", events);
-app.use("/leases", leases.router);
+app.use("/leases", leases);
 
 app.use((err, req, res, next) => {
     res.status(err.status || 500);

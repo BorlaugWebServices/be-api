@@ -24,9 +24,18 @@ router.get('/:leaseid', async (req, res) => {
         return res.status(404).send({msg: `Invalid lease id`}).end();
     }
 
-    let lease = await getLease(leaseid);
+    try {
+        const store = await config.dataStore.getStore();
+        let lease   = await store.lease.get(leaseid);
 
-    return res.status(200).send(lease).end();
+        return res.status(200).send(lease).end();
+    } catch(e) {
+        debug(e);
+        return res.status(200).send({
+            err: e,
+            msg: "Internal Server Error"
+        }).end();
+    }
 });
 
 router.get('/:leaseid/activities', async (req, res) => {
@@ -37,17 +46,20 @@ router.get('/:leaseid/activities', async (req, res) => {
         return res.status(404).send({msg: `Invalid lease id`}).end();
     }
 
-    let activityKeys = await lrange(`lease:${leaseid}:activities`, 0, -1);
-    let activities = await transactions.getTransactions(activityKeys);
+    try {
+        const store = await config.dataStore.getStore();
 
-    return res.status(200).send(activities).end();
+        let activityKeys = await store.lease.getActivities(leaseid);
+        let activities   = await store.transaction.getList(activityKeys);
+
+        return res.status(200).send(activities).end();
+    } catch(e) {
+        debug(e);
+        return res.status(200).send({
+            err: e,
+            msg: "Internal Server Error"
+        }).end();
+    }
 });
 
-const getLease = async function(leaseid) {
-    let lease = await get(`lease:${leaseid}`);
-    lease     = JSON.parse(lease);
-    return lease;
-};
-
-module.exports.getLease = getLease;
-module.exports.router   = router;
+module.exports = router;

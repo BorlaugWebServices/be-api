@@ -89,4 +89,4 @@ router.get('/:number', async (req, res) => {
     }
 });
 
-module.exports.router   = router;
+module.exports   = router;
