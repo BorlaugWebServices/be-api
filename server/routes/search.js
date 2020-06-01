@@ -1,34 +1,37 @@
 /**
  * Copyright (c) 2020 All Right Reserved, BWS
  */
-const debug       = require("debug")("api:search"),
-      express     = require("express"),
-      {promisify} = require("util");
-
-const router = express.Router();
+const debug   = require("debug")("be-api:search"),
+      express = require("express");
 
 const config = require("../../config");
-const get   = promisify(config.redis.get).bind(config.redis);
-const _keys = promisify(config.redis.keys).bind(config.redis);
 
-let blocks = require("./blocks"),
-    transactions =require("./transactions"),
-    leases = require("./leases");
+const router = express.Router();
 
 router.get('/', async (req, res) => {
     let searchCriteria = req.query.searchCriteria;
     debug(`GET - /search?searchCriteria=${searchCriteria}`);
 
-    const [block, txn, lease] = await Promise.all([
-        blocks.getBlock(searchCriteria.trim()),
-        transactions.getTransaction(searchCriteria.trim()),
-        leases.getLease(searchCriteria.trim())
-    ]);
+    const store = await config.dataStore.getStore();
+
+    let calls = [];
+
+    if(isNaN(searchCriteria.trim())){
+        calls.push(store.block.get(-1));
+        calls.push(store.lease.get(-1));
+    } else {
+        calls.push(store.block.get(searchCriteria.trim()));
+        calls.push(store.lease.get(searchCriteria.trim()));
+    }
+
+    calls.push(store.transaction.get(searchCriteria.trim()));
+
+    const [block, lease, txn ] = await Promise.all(calls);
 
     const searchResult = {
-        blocks: block?[block]:[],
-        txns: txn?[txn]:[],
-        leases: lease?[lease]:[]
+        blocks: block ? [block] : [],
+        txns: txn ? [txn] : [],
+        leases: lease ? [lease] : []
     };
 
     //debug('Search Result %j ;', searchResult);

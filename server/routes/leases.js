@@ -1,18 +1,13 @@
+require('lodash');
 /**
  * Copyright (c) 2020 All Right Reserved, BWS
  */
-const debug       = require("debug")("api:leases"),
-      express     = require("express"),
-      _           = require('lodash'),
-      {promisify} = require("util");
+const debug       = require("debug")("be-api:leases"),
+      express     = require("express");
 
 const config       = require("../../config");
-const transactions = require("./transactions");
 
 const router = express.Router();
-
-const get    = promisify(config.redis.get).bind(config.redis);
-const lrange = promisify(config.redis.lrange).bind(config.redis);
 
 const LEASE_ID_PATTERN = RegExp('^[0-9]*$');
 

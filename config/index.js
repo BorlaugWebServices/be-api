@@ -1,3 +1,5 @@
+const debug = require("debug")("be-api:config");
+
 const nconf  = require("nconf"),
       path   = require("path"),
       jayson = require("jayson/promise");
@@ -28,40 +30,40 @@ const subscriber = new RedisClustr({
 const harvester  = jayson.client.http(nconf.get('harvester'));
 
 client.on('error', (error) => {
-    console.error('Client', error.message);
+    debug(error.message);
 });
 client.on('connectionError', (error) => {
-    console.error(error.message);
+    debug(error.message);
 });
 client.on('connect', () => {
-    console.info('Client Successfully connected to redis');
+    debug('Client Successfully connected to redis');
 });
 client.on('fullReady', () => {
-    console.info('Successfully connected to redis and ready');
+    debug('Successfully connected to redis and ready');
 });
 
 subscriber.on('error', (error) => {
-    console.error('Subscriber', error.message);
+    debug('Subscriber', error.message);
 });
 subscriber.on('connectionError', (error) => {
-    console.error(error.message);
+    debug(error.message);
 });
 subscriber.on('connect', () => {
-    console.info('Subscriber Successfully connected to redis');
+    debug('Subscriber Successfully connected to redis');
 });
 client.on('fullReady', () => {
-    console.info('Successfully connected to redis and ready');
+    debug('Successfully connected to redis and ready');
 });
 
 module.exports            = nconf;
 module.exports.redis      = client;
 module.exports.subscriber = subscriber;
 module.exports.harvester  = harvester;
-module.exports.dataStore      =  {
+module.exports.dataStore  = {
     store: null,
-    getStore: async function(){
-        if(!this.store){
-            this.store = await Store.DataStore(nconf.get('db:type'),nconf.get('db:url'),nconf.get('cache:redisHosts'),nconf.get('cache:redisPorts'));
+    getStore: async function() {
+        if(!this.store) {
+            this.store = await Store.DataStore(nconf.get('db:type'), nconf.get('db:url'), nconf.get('cache:redisHosts'), nconf.get('cache:redisPorts'));
         }
         return this.store;
     }

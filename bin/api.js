@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const debug               = require("debug")("api:server");
+const debug               = require("debug")("be-api:server");
 const http                = require("http");
 const {format, promisify} = require("util"),
       sockio              = require("socket.io");

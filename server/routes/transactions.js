@@ -2,7 +2,7 @@
  * Copyright (c) 2020 All Right Reserved, BWS
  */
 
-const debug   = require("debug")("api:transactions"),
+const debug   = require("debug")("be-api:transactions"),
       express = require("express");
 
 const config = require("../../config");

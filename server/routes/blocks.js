@@ -1,9 +1,8 @@
-require("lodash");
 /**
  * Copyright (c) 2020 All Right Reserved, BWS
  */
 
-const debug       = require("debug")("api:blocks"),
+const debug       = require("debug")("be-api:blocks"),
       express     = require("express"),
       numeral     = require("numeral");
 

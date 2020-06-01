@@ -2,7 +2,7 @@
  * Copyright (c) 2020 All Right Reserved, BWS
  */
 
-const debug       = require("debug")("api:inherents"),
+const debug       = require("debug")("be-api:inherents"),
       express     = require("express");
 
 const config = require("../../config");
