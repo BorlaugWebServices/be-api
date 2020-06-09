@@ -1,18 +1,16 @@
 #!/usr/bin/env node
+const debug    = require("debug")("be-api:server"),
+      http     = require("http"),
+      {format} = require("util"),
+      sockio   = require("socket.io");
 
-const debug               = require("debug")("be-api:server");
-const http                = require("http");
-const {format, promisify} = require("util"),
-      sockio              = require("socket.io");
+const config = require("../config"),
+      server = require("../server"),
+      pjson  = require("../package.json");
 
-const config = require("../config");
-const server = require("../server");
-const pjson  = require("../package.json");
-
-const host   = config.get("host");
-const port   = config.get("port");
-const wsport = config.get("wsport");
-const app    = http.createServer(server);
+const host = config.host;
+const port = config.port;
+const app  = http.createServer(server);
 
 app.listen(port, host, () => {
     process.title = pjson.name + " " + pjson.version;
@@ -21,11 +19,10 @@ app.listen(port, host, () => {
 });
 
 let io = sockio.listen(app, {log: false});
-debug("Borlaug API Socket started");
+debug("be-api Socket started");
 
 const clients = {};
 
-// when socket connection status changes
 io.on('connection', async function(socket) {
     const remoteAddress = socket.client.conn.remoteAddress
     const sessionID     = socket.id;
@@ -60,10 +57,10 @@ io.on('connection', async function(socket) {
     socket.on('disconnect', function(client) {
         let i = clients[remoteAddress].indexOf(sessionID);
         clients[remoteAddress].splice(i);
-        if(clients[remoteAddress].length === 0){
+        if(clients[remoteAddress].length === 0) {
             delete clients[remoteAddress];
         }
-        debug('User disconnected', socket.id, '; Current clients: ',clients);
+        debug('User disconnected', socket.id, '; Current clients: ', clients);
     });
 });
 

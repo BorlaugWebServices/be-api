@@ -4,43 +4,15 @@ Rest API for borlaug block explorer `be-web`
 
 ### Configuration
 
-Add `env.json` file in config folder
+Add `.env` file in project root folder
 
 ```
-{
-    "host": "0.0.0.0",
-    "port": 3000,
-    "db": {
-        "type": "pg",
-        "url": "postgres://postgres:mysecretpassword@localhost:5432/borlaug"
-    },
-    "redisCluster": [
-        {
-            "host": "127.0.0.1",
-            "port": "7000"
-        },
-        {
-            "host": "127.0.0.1",
-            "port": "7001"
-        },
-        {
-            "host": "127.0.0.1",
-            "port": "7002"
-        },
-        {
-            "host": "127.0.0.1",
-            "port": "7003"
-        },
-        {
-            "host": "127.0.0.1",
-            "port": "7004"
-        },
-        {
-            "host": "127.0.0.1",
-            "port": "7005"
-        }
-    ],
-    "harvester": "http://127.0.0.1:4000",
-    "cacheCleanupSecret": "61a3ef4d-20ec-4057-8f4e-a2dd526ad9b9"
-}
+HOST=0.0.0.0
+PORT=3000
+DB_CONNECTION_TYPE=pg
+DB_CONNECTION_URL=postgres://postgres:mysecretpassword@localhost:5432/borlaug
+REDIS_HOSTS=127.0.0.1,127.0.0.1,127.0.0.1,127.0.0.1,127.0.0.1,127.0.0.1
+REDIS_PORTS=7000,7001,7002,7003,7004,7005
+HARVESTER=http://127.0.0.1:4000
+CACHE_CLEANUP_SECRET=secret
 ```

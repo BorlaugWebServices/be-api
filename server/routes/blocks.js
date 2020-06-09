@@ -49,7 +49,7 @@ router.route('/')
 .delete(async (req, res) => {
     debug(`DELETE - /blocks ; secret=${req.body.secret}`);
 
-    if(config.get("cacheCleanupSecret") === req.body.secret) {
+    if(config.cacheCleanupSecret === req.body.secret) {
         let reply = await config.harvester.request('cleanup', {});
         debug(reply);
         return res.status(200).send({count: reply.result}).end();

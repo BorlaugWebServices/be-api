@@ -8,3 +8,4 @@ tmp
 dist/
 downloads/
 package-lock.json
+.env

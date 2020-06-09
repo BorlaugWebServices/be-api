@@ -1,33 +1,30 @@
-const debug = require("debug")("be-api:config");
+const debug       = require("debug")("be-api:config"),
+      dotenv      = require('dotenv'),
+      Store       = require("be-datastore"),
+      jayson      = require("jayson/promise"),
+      RedisClient = require("redis"),
+      RedisClustr = require("redis-clustr");
 
-const nconf  = require("nconf"),
-      path   = require("path"),
-      jayson = require("jayson/promise");
+dotenv.config({path: `${__dirname}/../.env`});
 
-const Store = require("be-datastore");
+const REDIS_HOSTS = process.env.REDIS_HOSTS.split(',');
+const REDIS_PORTS = process.env.REDIS_PORTS.split(',');
+const servers     = [];
 
-let configPath = path.join(__dirname, '../config');
-nconf.env().argv();
-nconf.file({file: path.join(configPath, "env.json")});
+if(REDIS_HOSTS.length !== REDIS_PORTS.length) {
+    throw new Error("Redis cluster config mismatch");
+} else {
+    for(let i = 0; i < REDIS_HOSTS.length; i++) {
+        servers.push({host: REDIS_HOSTS[i], port: REDIS_PORTS[i]})
+    }
+}
 
-const RedisClient = require("redis");
-const RedisClustr = require("redis-clustr");
-
-const client     = new RedisClustr({
-    servers: nconf.get("redisCluster"),
+const client = new RedisClustr({
+    servers: servers,
     createClient: function(port, host) {
-        // this is the default behaviour
         return RedisClient.createClient(port, host);
     }
 });
-const subscriber = new RedisClustr({
-    servers: nconf.get("redisCluster"),
-    createClient: function(port, host) {
-        // this is the default behaviour
-        return RedisClient.createClient(port, host);
-    }
-});
-const harvester  = jayson.client.http(nconf.get('harvester'));
 
 client.on('error', (error) => {
     debug(error.message);
@@ -42,6 +39,13 @@ client.on('fullReady', () => {
     debug('Successfully connected to redis and ready');
 });
 
+const subscriber = new RedisClustr({
+    servers: servers,
+    createClient: function(port, host) {
+        return RedisClient.createClient(port, host);
+    }
+});
+
 subscriber.on('error', (error) => {
     debug('Subscriber', error.message);
 });
@@ -51,19 +55,22 @@ subscriber.on('connectionError', (error) => {
 subscriber.on('connect', () => {
     debug('Subscriber Successfully connected to redis');
 });
-client.on('fullReady', () => {
+subscriber.on('fullReady', () => {
     debug('Successfully connected to redis and ready');
 });
 
-module.exports            = nconf;
-module.exports.redis      = client;
-module.exports.subscriber = subscriber;
-module.exports.harvester  = harvester;
-module.exports.dataStore  = {
+
+module.exports.host               = process.env.HOST;
+module.exports.port               = process.env.PORT;
+module.exports.redis              = client;
+module.exports.subscriber         = subscriber;
+module.exports.harvester          = jayson.client.http(process.env.HARVESTER);
+module.exports.cacheCleanupSecret = process.env.CACHE_CLEANUP_SECRET;
+module.exports.dataStore          = {
     store: null,
     getStore: async function() {
         if(!this.store) {
-            this.store = await Store.DataStore(nconf.get('db:type'), nconf.get('db:url'), nconf.get('cache:redisHosts'), nconf.get('cache:redisPorts'));
+            this.store = await Store.DataStore(process.env.DB_CONNECTION_TYPE, process.env.DB_CONNECTION_URL, REDIS_HOSTS, REDIS_PORTS);
         }
         return this.store;
     }
