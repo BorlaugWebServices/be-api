@@ -17,6 +17,7 @@ const blocks       = require("./routes/blocks"),
       transactions = require("./routes/transactions"),
       inherents    = require("./routes/inherents"),
       events       = require("./routes/events"),
+      logs         = require("./routes/logs"),
       leases       = require("./routes/leases");
 
 app.use("/", require("./routes"));
@@ -25,6 +26,7 @@ app.use("/blocks", blocks);
 app.use("/transactions", transactions);
 app.use("/inherents", inherents);
 app.use("/events", events);
+app.use("/logs", logs);
 app.use("/leases", leases);
 
 app.use((err, req, res, next) => {
