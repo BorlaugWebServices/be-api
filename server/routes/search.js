@@ -4,37 +4,33 @@
 const debug   = require("debug")("be-api:search"),
       express = require("express");
 
-const config = require("../../config");
-
-const router = express.Router();
+const config         = require("../../config");
+const router         = express.Router();
 
 router.get('/', async (req, res) => {
     let searchCriteria = req.query.searchCriteria;
     debug(`GET - /search?searchCriteria=${searchCriteria}`);
 
     const store = await config.dataStore.getStore();
+    const calls = [];
 
-    let calls = [];
-
-    if(isNaN(searchCriteria.trim())){
-        calls.push(store.block.get(-1));
-        calls.push(store.lease.get(-1));
-    } else {
-        calls.push(store.block.get(searchCriteria.trim()));
-        calls.push(store.lease.get(searchCriteria.trim()));
-    }
-
+    calls.push(store.block.get(Number(searchCriteria.trim())));
+    calls.push(store.lease.get(Number(searchCriteria.trim())));
     calls.push(store.transaction.get(searchCriteria.trim()));
+    calls.push(store.inherent.get(searchCriteria.trim()));
+    calls.push(store.event.get(searchCriteria.trim()));
+    calls.push(store.log.get(searchCriteria.trim()));
 
-    const [block, lease, txn ] = await Promise.all(calls);
+    const [block, lease, txn, inherent, event, log] = await Promise.all(calls);
 
     const searchResult = {
         blocks: block ? [block] : [],
         txns: txn ? [txn] : [],
-        leases: lease ? [lease] : []
+        leases: lease ? [lease] : [],
+        inherents: inherent ? [inherent] : [],
+        events: event ? [event] : [],
+        logs: log? [log]: []
     };
-
-    //debug('Search Result %j ;', searchResult);
 
     return res.status(200).send(searchResult).end();
 });

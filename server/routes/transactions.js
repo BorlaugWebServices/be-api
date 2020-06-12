@@ -5,10 +5,8 @@
 const debug   = require("debug")("be-api:transactions"),
       express = require("express");
 
-const config = require("../../config");
-
-const router = express.Router();
-
+const config          = require("../../config");
+const router          = express.Router();
 const TX_HASH_PATTERN = RegExp('^0x([A-Fa-f0-9]{64})$');
 
 router.get('/:txhash', async (req, res) => {

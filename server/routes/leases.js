@@ -2,13 +2,11 @@ require('lodash');
 /**
  * Copyright (c) 2020 All Right Reserved, BWS
  */
-const debug       = require("debug")("be-api:leases"),
-      express     = require("express");
+const debug   = require("debug")("be-api:leases"),
+      express = require("express");
 
-const config       = require("../../config");
-
-const router = express.Router();
-
+const config           = require("../../config");
+const router           = express.Router();
 const LEASE_ID_PATTERN = RegExp('^[0-9]*$');
 
 router.get('/:leaseid', async (req, res) => {
