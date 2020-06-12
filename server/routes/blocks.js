@@ -2,13 +2,13 @@
  * Copyright (c) 2020 All Right Reserved, BWS
  */
 
-const debug       = require("debug")("be-api:blocks"),
-      express     = require("express"),
-      numeral     = require("numeral");
+const debug   = require("debug")("be-api:blocks"),
+      express = require("express"),
+      numeral = require("numeral");
 
 const config = require("../../config");
-
 const router = express.Router();
+const NUMBER_PATTERN = RegExp('^[0-9]*$');
 
 /**
  * Get blocks paginated.
@@ -64,15 +64,23 @@ router.route('/')
 router.get('/:number', async (req, res) => {
     debug(`GET - /blocks/${req.params.number}`);
     let number = req.params.number;
-    if(isNaN(number)) {
-        return res.status(400).end();
+
+    if(!NUMBER_PATTERN.test(number)) {
+        return res.status(404).send({msg: `Invalid block number`}).end();
     }
 
     const store = await config.dataStore.getStore();
     let block   = await store.block.get(number);
 
+    if(!block) {
+        let reply = await config.harvester.request('syncBlock',  {blockNumber: number});
+        if(reply.result){
+            block = JSON.parse(reply.result);
+        }
+    }
+
     if(block) {
-        const [  inherents, events, logs] = await Promise.all([
+        const [inherents, events, logs] = await Promise.all([
             store.inherent.getList(block.inherents),
             store.event.getList(block.events),
             store.log.getList(block.logs)
@@ -88,4 +96,4 @@ router.get('/:number', async (req, res) => {
     }
 });
 
-module.exports   = router;
+module.exports = router;

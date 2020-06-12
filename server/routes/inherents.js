@@ -2,13 +2,11 @@
  * Copyright (c) 2020 All Right Reserved, BWS
  */
 
-const debug       = require("debug")("be-api:inherents"),
-      express     = require("express");
+const debug   = require("debug")("be-api:inherents"),
+      express = require("express");
 
-const config = require("../../config");
-
-const router = express.Router();
-
+const config              = require("../../config");
+const router              = express.Router();
 const INHERENT_ID_PATTERN = RegExp('^[0-9]*-[0-9]*$');
 
 router.get('/:inherentid', async (req, res) => {
