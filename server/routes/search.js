@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
     const store = await config.dataStore.getStore();
     const calls = [];
 
-    calls.push(store.block.get(Number(searchCriteria.trim())));
+    calls.push(store.block.get(searchCriteria.trim()));
     calls.push(store.lease.get(Number(searchCriteria.trim())));
     calls.push(store.transaction.get(searchCriteria.trim()));
     calls.push(store.inherent.get(searchCriteria.trim()));
@@ -24,7 +24,8 @@ router.get('/', async (req, res) => {
     let [block, lease, txn, inherent, event, log] = await Promise.all(calls);
 
     if(!block) {
-        let reply = await config.harvester.request('syncBlock',  {blockNumber: Number(searchCriteria.trim())});
+        debug("block sync request");
+        let reply = await config.harvester.request('syncBlock',  {numberOrHash: searchCriteria.trim()});
         if(reply.result){
             block = JSON.parse(reply.result);
         }
