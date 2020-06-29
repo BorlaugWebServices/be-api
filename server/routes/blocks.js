@@ -8,7 +8,9 @@ const debug   = require("debug")("be-api:blocks"),
 
 const config = require("../../config");
 const router = express.Router();
+
 const NUMBER_PATTERN = RegExp('^[0-9]*$');
+const HASH_PATTERN   = RegExp('^0x([A-Fa-f0-9]{64})$');
 
 /**
  * Get blocks paginated.
@@ -61,20 +63,20 @@ router.route('/')
 /**
  * Get a specific block
  */
-router.get('/:number', async (req, res) => {
-    debug(`GET - /blocks/${req.params.number}`);
-    let number = req.params.number;
+router.get('/:numberOrHash', async (req, res) => {
+    debug(`GET - /blocks/${req.params.numberOrHash}`);
+    let numberOrHash = req.params.numberOrHash;
 
-    if(!NUMBER_PATTERN.test(number)) {
-        return res.status(404).send({msg: `Invalid block number`}).end();
+    if(!NUMBER_PATTERN.test(numberOrHash) && !HASH_PATTERN.test(numberOrHash)) {
+        return res.status(404).send({msg: `Invalid block number or hash`}).end();
     }
 
     const store = await config.dataStore.getStore();
-    let block   = await store.block.get(number);
+    let block   = await store.block.get(numberOrHash);
 
     if(!block) {
-        let reply = await config.harvester.request('syncBlock',  {blockNumber: number});
-        if(reply.result){
+        let reply = await config.harvester.request('syncBlock', {numberOrHash: numberOrHash});
+        if(reply.result) {
             block = JSON.parse(reply.result);
         }
     }
@@ -92,7 +94,7 @@ router.get('/:number', async (req, res) => {
         block["logs"]         = logs;
         return res.status(200).send(block).end();
     } else {
-        return res.status(404).send({msg: `Block #${number} not found`}).end();
+        return res.status(404).send({msg: `Block #${numberOrHash} not found`}).end();
     }
 });
 
