@@ -3,6 +3,7 @@
  */
 
 const debug   = require("debug")("be-api:transactions"),
+      _       = require("lodash"),
       express = require("express");
 
 const config          = require("../../config");
@@ -28,4 +29,17 @@ router.get('/:txhash', async (req, res) => {
     return res.status(200).send(transaction).end();
 });
 
-module.exports = router;
+async function getTransactionStatus(transaction) {
+    const store = await config.dataStore.getStore();
+
+    let events = await store.event.getList(transaction["events"]);
+
+    let successEvents = _.filter(events, (event) => {
+        return event.meta.name === 'ExtrinsicSuccess'
+    });
+
+    return successEvents.length > 0;
+}
+
+module.exports                      = router;
+module.exports.getTransactionStatus = getTransactionStatus;

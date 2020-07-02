@@ -1,13 +1,14 @@
-require('lodash');
 /**
  * Copyright (c) 2020 All Right Reserved, BWS
  */
 const debug   = require("debug")("be-api:leases"),
+      _       = require("lodash"),
       express = require("express");
 
-const config           = require("../../config");
-const router           = express.Router();
-const LEASE_ID_PATTERN = RegExp('^[0-9]*$');
+const config               = require("../../config");
+const trx = require("./transactions");
+const router               = express.Router();
+const LEASE_ID_PATTERN     = RegExp('^[0-9]*$');
 
 router.get('/:leaseid', async (req, res) => {
     let leaseid = req.params.leaseid;
@@ -45,6 +46,17 @@ router.get('/:leaseid/activities', async (req, res) => {
         let activityKeys = await store.lease.getActivities(leaseid);
         let activities   = await store.transaction.getList(activityKeys);
 
+        /**** TEST ****/
+        let calls = [];
+        activities.forEach(act => {
+            calls.push(trx.getTransactionStatus(act));
+        });
+        let [statuses] = await Promise.all(calls);
+        activities.forEach((e, i, a) => {
+            a["isSuccess"] = statuses [i];
+        });
+        /************/
+
         return res.status(200).send(activities).end();
     } catch(e) {
         debug(e);
@@ -54,5 +66,6 @@ router.get('/:leaseid/activities', async (req, res) => {
         }).end();
     }
 });
+
 
 module.exports = router;
