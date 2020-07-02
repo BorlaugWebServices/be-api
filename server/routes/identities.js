@@ -51,10 +51,11 @@ router.get('/:did/activities', async (req, res) => {
         activities.forEach(act => {
             calls.push(transaction.getTransactionStatus(act));
         });
-        let [statuses] = await Promise.all(calls);
+        let statuses = await Promise.all(calls);
         activities.forEach((e, i, a) => {
-            a["isSuccess"] = statuses [i];
+            a[i]["isSuccess"] = statuses[i];
         });
+        /************/
 
 
         return res.status(200).send(activities).end();

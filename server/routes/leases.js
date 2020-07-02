@@ -49,11 +49,11 @@ router.get('/:leaseid/activities', async (req, res) => {
         /**** TEST ****/
         let calls = [];
         activities.forEach(act => {
-            calls.push(trx.getTransactionStatus(act));
+            calls.push(transaction.getTransactionStatus(act));
         });
-        let [statuses] = await Promise.all(calls);
+        let statuses = await Promise.all(calls);
         activities.forEach((e, i, a) => {
-            a["isSuccess"] = statuses [i];
+            a[i]["isSuccess"] = statuses[i];
         });
         /************/
 
