@@ -44,7 +44,7 @@ router.get('/:did/activities', async (req, res) => {
         const store = await config.dataStore.getStore();
 
         let activityKeys = await store.identity.getActivities(`0x${did.split(':')[2]}`);
-        let activities   = await store.transaction.getList(activityKeys);
+        let activities   = activityKeys.length > 0 ? await store.transaction.getList(activityKeys) : [];
 
         /**** TEST ****/
         let calls = [];
@@ -56,7 +56,6 @@ router.get('/:did/activities', async (req, res) => {
             a[i]["isSuccess"] = statuses[i];
         });
         /************/
-
 
         return res.status(200).send(activities).end();
     } catch(e) {

@@ -5,10 +5,10 @@ const debug   = require("debug")("be-api:leases"),
       _       = require("lodash"),
       express = require("express");
 
-const config               = require("../../config");
-const trx = require("./transactions");
-const router               = express.Router();
-const LEASE_ID_PATTERN     = RegExp('^[0-9]*$');
+const config           = require("../../config");
+const transaction      = require("./transactions");
+const router           = express.Router();
+const LEASE_ID_PATTERN = RegExp('^[0-9]*$');
 
 router.get('/:leaseid', async (req, res) => {
     let leaseid = req.params.leaseid;
@@ -44,7 +44,7 @@ router.get('/:leaseid/activities', async (req, res) => {
         const store = await config.dataStore.getStore();
 
         let activityKeys = await store.lease.getActivities(leaseid);
-        let activities   = await store.transaction.getList(activityKeys);
+        let activities   = activityKeys.length > 0 ? await store.transaction.getList(activityKeys) : [];
 
         /**** TEST ****/
         let calls = [];
@@ -60,12 +60,11 @@ router.get('/:leaseid/activities', async (req, res) => {
         return res.status(200).send(activities).end();
     } catch(e) {
         debug(e);
-        return res.status(200).send({
-            err: e,
+        return res.status(500).send({
+            err: e.message,
             msg: "Internal Server Error"
         }).end();
     }
 });
-
 
 module.exports = router;
