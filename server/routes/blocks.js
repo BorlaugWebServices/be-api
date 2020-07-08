@@ -4,6 +4,7 @@
 
 const debug   = require("debug")("be-api:blocks"),
       express = require("express"),
+      _       = require("lodash"),
       numeral = require("numeral");
 
 const config = require("../../config");
@@ -30,11 +31,32 @@ router.route('/')
         const store = await config.dataStore.getStore();
         total       = await store.block.latestBlockNumber();
         let numbers = [];
+        let calls   = [];
         for(let i = start; i <= end; i++) {
             numbers.push(total - i);
         }
 
         let blocks = await store.block.getList(numbers);
+
+        for(let i = 0; i < blocks.length; i++) {
+            if(!blocks[i]) {
+                calls.push(syncBlock(numbers[i]));
+            }
+        }
+
+        // sync missing blocks
+        let syncedBlocks = await Promise.all(calls);
+
+        // set missing blocks
+        blocks.forEach((block,i,ar) => {
+            if(!block) {
+                ar[i] = syncedBlocks.shift();
+            }
+        })
+
+        blocks = _.filter(blocks, (block) => {
+            return block != null
+        });
 
         return res.status(200).send({
             total: total,
@@ -75,10 +97,7 @@ router.get('/:numberOrHash', async (req, res) => {
     let block   = await store.block.get(numberOrHash);
 
     if(!block) {
-        let reply = await config.harvester.request('syncBlock', {numberOrHash: numberOrHash});
-        if(reply.result) {
-            block = JSON.parse(reply.result);
-        }
+        block = await syncBlock(numberOrHash);
     }
 
     if(block) {
@@ -97,5 +116,14 @@ router.get('/:numberOrHash', async (req, res) => {
         return res.status(404).send({msg: `Block #${numberOrHash} not found`}).end();
     }
 });
+
+async function syncBlock(numberOrHash) {
+    let block = null;
+    let reply = await config.harvester.request('syncBlock', {numberOrHash: numberOrHash});
+    if(reply.result) {
+        block = JSON.parse(reply.result);
+    }
+    return block;
+}
 
 module.exports = router;
