@@ -29,8 +29,12 @@ subscriber.on('ready', (error) => {
     debug('Redis subscriber Ready');
 });
 
+const DB_TYPE                     = process.env.DB_CONNECTION_TYPE;
+const DB_URL                     = process.env.DB_CONNECTION_URL;
 module.exports.host               = process.env.HOST;
 module.exports.port               = process.env.PORT;
+const TTL_MIN                     = process.env.TTL_MIN;
+const TTL_MAX                     = process.env.TTL_MAX;
 module.exports.redis              = client;
 module.exports.subscriber         = subscriber;
 module.exports.harvester          = jayson.client.http(process.env.HARVESTER);
@@ -39,7 +43,7 @@ module.exports.dataStore          = {
     store: null,
     getStore: async function() {
         if(!this.store) {
-            this.store = await Store.DataStore(process.env.DB_CONNECTION_TYPE, process.env.DB_CONNECTION_URL, REDIS_HOST, REDIS_PORT);
+            this.store = await Store.DataStore(DB_TYPE, DB_URL, REDIS_HOST, REDIS_PORT, TTL_MIN, TTL_MAX);
         }
         return this.store;
     }
