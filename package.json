@@ -14,7 +14,7 @@
   "author": "BWS",
   "license": "ISC",
   "dependencies": {
-    "be-datastore": "git+https://github.com/BorlaugWebServices/be-datastore.git#inca",
+    "be-datastore": "git+https://github.com/BorlaugWebServices/be-datastore.git#sandbox",
     "body-parser": "^1.19.0",
     "bufferutil": "^4.0.1",
     "cors": "^2.8.5",
