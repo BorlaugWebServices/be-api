@@ -72,7 +72,6 @@ router.route('/')
 })
 .delete(async (req, res) => {
     debug(`DELETE - /blocks ; secret=${req.body.secret}`);
-    debug('secret',config.cacheCleanupSecret);
 
     if(config.cacheCleanupSecret === req.body.secret) {
         let reply = await config.harvester.request('cleanup', {});
