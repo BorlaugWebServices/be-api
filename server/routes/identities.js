@@ -19,10 +19,16 @@ router.get('/:did', async (req, res) => {
     }
 
     try {
-        const store  = await config.dataStore.getStore();
-        let identity = await store.identity.get(`0x${did.split(':')[2]}`);
+        const store       = await config.dataStore.getStore();
+        let identity      = await store.identity.get(`0x${did.split(':')[2]}`);
+        let document      = await config.harvester.request('getDIDState', {did: `0x${did.split(':')[2]}`});
 
-        return res.status(200).send(identity).end();
+        let payload = {
+            ...identity,
+            ...document.result
+        }
+
+        return res.status(200).send(payload).end();
     } catch(e) {
         debug(e);
         return res.status(200).send({
