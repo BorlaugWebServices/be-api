@@ -37,17 +37,24 @@ io.on('connection', async function(socket) {
     debug('connected users', clients);
 
     const blocksChannel = "blockUpdated";
+    const txnsChannel = "transactionUpdated";
 
     config.subscriber.on('message', (channel, message) => {
         // console.log(`Received the following message from ${blocksChannel}: ${message}`);
-        let blockWithTime = {
-            latestBlockTime: new Date(),
-            block: JSON.parse(message)
-        };
-        io.emit('block updated', blockWithTime);
+        if(channel === blocksChannel) {
+            let blockWithTime = {
+                latestBlockTime: new Date(),
+                block: JSON.parse(message)
+            };
+            io.emit('block updated', blockWithTime);
+        }
+
+        if(channel === txnsChannel) {
+            io.emit('txn updated', JSON.parse(message));
+        }
     });
 
-    config.subscriber.subscribe(blocksChannel, (error, count) => {
+    config.subscriber.subscribe(blocksChannel, txnsChannel, (error, count) => {
         if(error) {
             throw new Error(error);
         }
