@@ -19,7 +19,8 @@ const blocks       = require("./routes/blocks"),
       events       = require("./routes/events"),
       logs         = require("./routes/logs"),
       leases       = require("./routes/leases"),
-      identities   = require("./routes/identities");
+      identities   = require("./routes/identities"),
+      audits       = require("./routes/audits");
 
 app.use("/", require("./routes"));
 app.use("/search", require("./routes/search"));
@@ -30,6 +31,7 @@ app.use("/events", events);
 app.use("/logs", logs);
 app.use("/leases", leases);
 app.use("/identities", identities);
+app.use("/audits", audits);
 
 app.use((err, req, res, next) => {
     res.status(err.status || 500);
