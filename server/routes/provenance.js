@@ -27,18 +27,16 @@ router.get('/:sequenceid', async (req, res) => {
         ]);
         template_steps                       = template_steps.result;
         sequence_steps                       = sequence_steps.result;
-        sequence_steps.pop();
-        sequence_steps.pop();
 
         let steps = [];
         let previousStatus = null;
         template_steps.forEach((tmp, i, arr) => {
             let status = 'IN_PROGRESS';
             if(sequence_steps[i]) {
-                status         = 'COMPLETE';
-                previousStatus = 'COMPLETE';
+                status         = 'ATTESTED';
+                previousStatus = 'ATTESTED';
             } else {
-                if(previousStatus === 'COMPLETE' || previousStatus === null) {
+                if(previousStatus === 'ATTESTED' || previousStatus === null) {
                     status         = 'IN_PROGRESS';
                     previousStatus = 'IN_PROGRESS';
                 } else {

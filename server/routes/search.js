@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
         events: event ? [event] : [],
         logs: log ? [log] : [],
         identities: identity ? [identity] : [],
-        sequences: sequence ? [sequences]: []
+        sequences: sequence ? [sequence]: []
     };
 
     return res.status(200).send(searchResult).end();
