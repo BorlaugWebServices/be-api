@@ -19,15 +19,19 @@ router.get('/:sequenceid', async (req, res) => {
     }
 
     try {
+        console.log('================================================');
         const store                          = await config.dataStore.getStore();
+        console.log(1, store);
         let sequence                         = await store.provenance.get(sequenceid);
+        console.log(2, sequence);
         let [template_steps, sequence_steps] = await Promise.all([
             config.harvester.request('getTemplateSteps', {registryid: sequence.registry, templateid: sequence.template}),
             config.harvester.request('getSequenceSteps', {registryid: sequence.registry, templateid: sequence.template, sequenceid: sequence.id})
         ]);
+        console.log(3, template_steps, sequence_steps);
         template_steps                       = template_steps.result;
         sequence_steps                       = sequence_steps.result;
-
+        
         let steps = [];
         let previousStatus = null;
         template_steps.forEach((tmp, i, arr) => {
@@ -56,7 +60,7 @@ router.get('/:sequenceid', async (req, res) => {
         return res.status(200).send(sequence).end();
     } catch(e) {
         debug(e);
-        return res.status(200).send({
+        return res.status(500).send({
             err: e,
             msg: "Internal Server Error"
         }).end();
