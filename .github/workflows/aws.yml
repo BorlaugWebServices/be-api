@@ -24,7 +24,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: Setup ECR
         run: $( aws ecr get-login --no-include-email --region eu-central-1)
@@ -41,7 +41,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: Setup ECR
         run: $( aws ecr get-login --no-include-email --region ap-south-1)
