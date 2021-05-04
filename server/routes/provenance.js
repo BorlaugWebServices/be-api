@@ -21,10 +21,18 @@ router.get('/:sequenceid', async (req, res) => {
     try {
         const store                          = await config.dataStore.getStore();
         let sequence                         = await store.provenance.get(sequenceid);
+<<<<<<< Updated upstream
+=======
+        console.log('Sequence', sequence);
+>>>>>>> Stashed changes
         let [template_steps, sequence_steps] = await Promise.all([
             config.harvester.request('getTemplateSteps', {registryid: sequence.registry, templateid: sequence.template}),
             config.harvester.request('getSequenceSteps', {registryid: sequence.registry, templateid: sequence.template, sequenceid: sequence.id})
         ]);
+<<<<<<< Updated upstream
+=======
+        console.log('template_steps and sequence_steps', template_steps, sequence_steps);
+>>>>>>> Stashed changes
         template_steps                       = template_steps.result;
         sequence_steps                       = sequence_steps.result;
 
