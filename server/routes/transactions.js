@@ -53,6 +53,30 @@ router.get('/:txhash', async (req, res) => {
     return res.status(200).send(transaction).end();
 });
 
+router.get('/:blockhash/:txhash', async (req, res) => {
+    let blockhash = req.params.blockhash;
+    let txhash = req.params.txhash;
+    debug(`GET - /transactions/${txhash}`);
+
+    if(!TX_HASH_PATTERN.test(txhash)) {
+        return res.status(404).send({msg: `Invalid tx hash`}).end();
+    }
+
+    const store     = await config.dataStore.getStore();
+    let transaction = await store.transaction.get(txhash);
+    if(!transaction) {
+        transaction = await syncTx(blockhash, txhash)
+        // return res.status(404).send({msg: `Tx hash ${txhash} not found`}).end();
+    }
+
+    if(transaction) {
+        transaction["events"] = await store.event.getList(transaction["events"]);
+        return res.status(200).send(transaction).end();
+    }else{
+        return res.status(404).send({msg: `Tx hash ${txhash} not found`}).end();
+    }
+});
+
 async function getTransactionStatus(transaction) {
     const store = await config.dataStore.getStore();
 
@@ -63,6 +87,15 @@ async function getTransactionStatus(transaction) {
     });
 
     return successEvents.length > 0;
+}
+
+async function syncTx(blockHash, txHash) {
+    let block = null;
+    let reply = await config.harvester.request('syncBlock', {numberOrHash: numberOrHash});
+    if(reply.result) {
+        block = JSON.parse(reply.result);
+    }
+    return block;
 }
 
 module.exports                      = router;
