@@ -25,10 +25,6 @@ router.get('/:sequenceid', async (req, res) => {
         console.log('Sequence', sequence);
         let template_steps = await config.harvester.request('getTemplateSteps', {registryid: sequence.registry, templateid: sequence.template});
         let sequence_steps = await config.harvester.request('getSequenceSteps', {registryid: sequence.registry, templateid: sequence.template, sequenceid: sequence.id});
-        // let [template_steps, sequence_steps] = await Promise.all([
-        //     config.harvester.request('getTemplateSteps', {registryid: sequence.registry, templateid: sequence.template}),
-        //     config.harvester.request('getSequenceSteps', {registryid: sequence.registry, templateid: sequence.template, sequenceid: sequence.id})
-        // ]);
         console.log('template_steps and sequence_steps', template_steps, sequence_steps);
         template_steps                       = template_steps.result;
         sequence_steps                       = sequence_steps.result;
