@@ -21,7 +21,8 @@ const blocks       = require("./routes/blocks"),
       leases       = require("./routes/leases"),
       identities   = require("./routes/identities"),
       audits       = require("./routes/audits"),
-      provenance   = require("./routes/provenance");
+      provenance   = require("./routes/provenance"),
+      account   = require("./routes/account");
 
 app.use("/", require("./routes"));
 app.use("/search", require("./routes/search"));
@@ -33,7 +34,8 @@ app.use("/logs", logs);
 app.use("/leases", leases);
 app.use("/identities", identities);
 app.use("/audits", audits);
-app.use("/sequences", provenance);
+app.use("/sequences", provenance),
+app.use("/accounts", account);
 
 app.use((err, req, res, next) => {
     res.status(err.status || 500);
