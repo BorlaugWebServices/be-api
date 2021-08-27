@@ -80,8 +80,8 @@ router.get('/:sequenceid/activities', async (req, res) => {
 
         /**** TEST ****/
         let calls = [];
-        activities.forEach(act => {
-            calls.push(transaction.getTransactionStatus(act));
+        activityKeys.forEach(act => {
+            calls.push(transaction.getTransactionStatus(act.hash));
         });
         let statuses = await Promise.all(calls);
         activities.forEach((e, i, a) => {
