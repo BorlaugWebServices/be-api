@@ -80,12 +80,17 @@ async function getTransactionStatus(transaction) {
     const store = await config.dataStore.getStore();
 
     let events = await store.event.getList(transaction["events"]);
+    debug("=============== Transaction Status for Events =====================");
+    debug(transaction)
+    debug(events);
 
-    let successEvents = _.filter(events, (event) => {
-        return event.meta.name === 'ExtrinsicSuccess'
-    });
+    return events.find(e=> e.meta.name == 'ExtrinsicSuccess')
 
-    return successEvents.length > 0;
+    // let successEvents = _.filter(events, (event) => {
+    //     return event.meta.name === 'ExtrinsicSuccess'
+    // });
+    //
+    // return successEvents.length > 0;
 }
 
 async function syncTx(blockHash, txHash) {

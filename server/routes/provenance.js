@@ -85,7 +85,7 @@ router.get('/:sequenceid/activities', async (req, res) => {
         });
         let statuses = await Promise.all(calls);
         activities.forEach((e, i, a) => {
-            a[i]["isSuccess"] = statuses[i];
+            a[i]["isSuccess"] = statuses[i]? true : false;
         });
         /************/
 
