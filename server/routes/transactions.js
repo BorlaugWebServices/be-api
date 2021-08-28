@@ -78,20 +78,17 @@ router.get('/:blockhash/:txhash', async (req, res) => {
 
 async function getTransactionStatus(transaction) {
     const store = await config.dataStore.getStore();
-    let transaction_from_db = await store.transaction.get(transaction.hash);
-    let events = await store.event.getList(transaction_from_db["events"]);
-    debug("=============== Transaction Status for Events =====================");
-    debug(transaction)
-    debug(transaction_from_db)
+
+    let events = [];
+    if(transaction["events"] && transaction["events"].length > 0){
+        events = await store.event.getList(transaction["events"])
+    }else {
+        let transaction_from_db = await store.transaction.get(transaction.hash)
+        events = await store.event.getList(transaction_from_db["events"])
+    }
     debug(events);
 
     return events.find(e=> e.meta.name === 'ExtrinsicSuccess')
-
-    // let successEvents = _.filter(events, (event) => {
-    //     return event.meta.name === 'ExtrinsicSuccess'
-    // });
-    //
-    // return successEvents.length > 0;
 }
 
 async function syncTx(blockHash, txHash) {
