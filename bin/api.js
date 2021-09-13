@@ -1,16 +1,16 @@
 #!/usr/bin/env node
-const debug    = require("debug")("be-api:server"),
-      http     = require("http"),
-      {format} = require("util"),
-      sockio   = require("socket.io");
+const debug = require("debug")("be-api:server"),
+    http = require("http"),
+    { format } = require("util"),
+    sockio = require("socket.io");
 
 const config = require("../config"),
-      server = require("../server"),
-      pjson  = require("../package.json");
+    server = require("../server"),
+    pjson = require("../package.json");
 
 const host = config.host;
 const port = config.port;
-const app  = http.createServer(server);
+const app = http.createServer(server);
 
 app.listen(port, host, () => {
     process.title = pjson.name + " " + pjson.version;
@@ -18,18 +18,18 @@ app.listen(port, host, () => {
     debug("Borlaug API service started on %s:%s", host, port);
 });
 
-let io = sockio.listen(app, {log: false});
+let io = sockio.listen(app, { log: false });
 debug("be-api Socket started");
 
 const clients = {};
 
-io.on('connection', async function(socket) {
-    const remoteAddress = socket.client.conn.remoteAddress
-    const sessionID     = socket.id;
+io.on('connection', async function (socket) {
+    const remoteAddress = socket.client.conn.remoteAddress;
+    const sessionID = socket.id;
 
     debug('a user connected');
 
-    if(!clients[remoteAddress]) {
+    if (!clients[remoteAddress]) {
         clients[remoteAddress] = [];
     }
     clients[remoteAddress].push(sessionID);
@@ -41,7 +41,7 @@ io.on('connection', async function(socket) {
 
     config.subscriber.on('message', (channel, message) => {
         // console.log(`Received the following message from ${blocksChannel}: ${message}`);
-        if(channel === blocksChannel) {
+        if (channel === blocksChannel) {
             let blockWithTime = {
                 latestBlockTime: new Date(),
                 block: JSON.parse(message)
@@ -49,22 +49,22 @@ io.on('connection', async function(socket) {
             io.emit('block updated', blockWithTime);
         }
 
-        if(channel === txnsChannel) {
+        if (channel === txnsChannel) {
             io.emit('txn updated', JSON.parse(message));
         }
     });
 
     config.subscriber.subscribe(blocksChannel, txnsChannel, (error, count) => {
-        if(error) {
+        if (error) {
             throw new Error(error);
         }
         // console.log(`Subscribed to ${count} channel. Listening for updates on the ${blocksChannel} channel.`);
     });
 
-    socket.on('disconnect', function(client) {
+    socket.on('disconnect', function (client) {
         let i = clients[remoteAddress].indexOf(sessionID);
         clients[remoteAddress].splice(i);
-        if(clients[remoteAddress].length === 0) {
+        if (clients[remoteAddress].length === 0) {
             delete clients[remoteAddress];
         }
         debug('User disconnected', socket.id, '; Current clients: ', clients);
@@ -74,17 +74,17 @@ io.on('connection', async function(socket) {
 /**
  * Start http server and attach signal handlers.
  */
-let stop = async function(msg) {
+let stop = async function (msg) {
     process.exit();
 };
 
-process.on("uncaughtException", function(err) {
+process.on("uncaughtException", function (err) {
     debug(err.stack);
     debug("uncaughtException", err);
-}).on("SIGINT", function() {
+}).on("SIGINT", function () {
     stop("Received SIGINT Ctrl+C signal. Borlaug API service shutdown.");
-}).on("SIGTERM", function() {
+}).on("SIGTERM", function () {
     stop("Received SIGTERM signal. Borlaug API service shutdown.");
-}).on("exit", function() {
+}).on("exit", function () {
     stop("Borlaug API service shutdown.");
 });

@@ -5,6 +5,7 @@ COPY . /home/api
 WORKDIR "/home/api"
 
 RUN npm install --silent
+RUN chmod +x ./bin/api.js
 
 EXPOSE 3000
 
