@@ -1,9 +1,9 @@
 /**
  * Application starts here.
  */
-const cors       = require("cors"),
-      express    = require("express"),
-      bodyParser = require("body-parser");
+const cors = require("cors"),
+    express = require("express"),
+    bodyParser = require("body-parser");
 
 require('express-async-errors');
 
@@ -13,16 +13,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(express.static('downloads'));
 
-const blocks       = require("./routes/blocks"),
-      transactions = require("./routes/transactions"),
-      inherents    = require("./routes/inherents"),
-      events       = require("./routes/events"),
-      logs         = require("./routes/logs"),
-      leases       = require("./routes/leases"),
-      identities   = require("./routes/identities"),
-      audits       = require("./routes/audits"),
-      provenance   = require("./routes/provenance"),
-      account   = require("./routes/account");
+const blocks = require("./routes/blocks"),
+    transactions = require("./routes/transactions"),
+    inherents = require("./routes/inherents"),
+    events = require("./routes/events"),
+    logs = require("./routes/logs"),
+    leases = require("./routes/leases"),
+    identities = require("./routes/identities"),
+    audits = require("./routes/audits"),
+    provenance = require("./routes/provenance"),
+    proposal = require("./routes/proposal"),
+    account = require("./routes/account");
 
 app.use("/", require("./routes"));
 app.use("/search", require("./routes/search"));
@@ -35,7 +36,8 @@ app.use("/leases", leases);
 app.use("/identities", identities);
 app.use("/audits", audits);
 app.use("/sequences", provenance),
-app.use("/accounts", account);
+    app.use("/accounts", account);
+app.use("/proposals", proposal);
 
 app.use((err, req, res, next) => {
     res.status(err.status || 500);
