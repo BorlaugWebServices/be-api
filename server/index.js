@@ -23,6 +23,7 @@ const blocks = require("./routes/blocks"),
     audits = require("./routes/audits"),
     provenance = require("./routes/provenance"),
     proposal = require("./routes/proposal"),
+    groups = require("./routes/groups"),
     account = require("./routes/account");
 
 app.use("/", require("./routes"));
@@ -35,9 +36,10 @@ app.use("/logs", logs);
 app.use("/leases", leases);
 app.use("/identities", identities);
 app.use("/audits", audits);
-app.use("/sequences", provenance),
-    app.use("/accounts", account);
+app.use("/sequences", provenance);
+app.use("/accounts", account);
 app.use("/proposals", proposal);
+app.use("/groups", groups);
 
 app.use((err, req, res, next) => {
     res.status(err.status || 500);
