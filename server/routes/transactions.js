@@ -23,6 +23,15 @@ router.route('/')
         const store = await config.dataStore.getStore();
 
         let txns = await store.transaction.getPage(page, perPage);
+        for (let i = 0; i < txns.slice.length; i++) {
+            let txhash = txns.slice[i].hash;
+            let transaction = await store.transaction.get(txhash);
+            let events = await store.event.getList(transaction["events"]);
+            let depositEvent = _.find(events, (event) => {
+                return event.meta.name === "Deposit";
+            });
+            txns.slice[i]['tx_fee'] = depositEvent ? Number(depositEvent.event.data[0]) : 0;
+        }
 
         return res.status(200).send(txns).end();
     } catch(e) {
