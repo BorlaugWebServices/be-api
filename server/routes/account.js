@@ -18,6 +18,11 @@ router.route('')
             const store = await config.dataStore.getStore();
 
             let signers = await store.transaction.getSigners(page, perPage);
+            for (let i = 0; i < signers.slice.length; i++) {
+                let signer = signers.slice[i].signer;
+                let balance = await config.harvester.request('getBalance', {address: signer});
+                signers.slice[i]['balance'] = balance ? balance.result : 0;
+            }
 
             return res.status(200).send(signers).end();
         } catch (e) {

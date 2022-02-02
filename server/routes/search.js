@@ -29,8 +29,9 @@ router.get('/', async (req, res) => {
     calls.push(store.provenance.get(searchCriteria.trim()));
     calls.push(store.group.get(searchCriteria.trim()));
     calls.push(store.proposal.get(searchCriteria.trim()));
+    calls.push(store.identity.get_catalog(searchCriteria.trim()));
 
-    let [block, address, lease, audit, txn, inherent, event, log, identity, sequence, group, proposal] = await Promise.all(calls);
+    let [block, address, lease, audit, txn, inherent, event, log, identity, sequence, group, proposal, catalog] = await Promise.all(calls);
 
     if (!block && (NUMBER_PATTERN.test(searchCriteria.trim()) || HASH_PATTERN.test(searchCriteria.trim()))) {
         debug("block sync request");
@@ -53,7 +54,8 @@ router.get('/', async (req, res) => {
         identities: identity ? [identity] : [],
         sequences: sequence ? [sequence] : [],
         groups: group ? [group] : [],
-        proposals: proposal ? [proposal] : []
+        proposals: proposal ? [proposal] : [],
+        catalogs: catalog ? [catalog] : []
     };
 
     return res.status(200).send(searchResult).end();
