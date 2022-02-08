@@ -30,7 +30,12 @@ router.route('/')
             let depositEvent = _.find(events, (event) => {
                 return event.meta.name === "Deposit";
             });
+            let extrinsicSuccessEvent = _.find(events, (event) => {
+                return event.meta.name === "ExtrinsicSuccess";
+            });
+            debug(extrinsicSuccessEvent.event.data)
             txns.slice[i]['tx_fee'] = depositEvent ? Number(depositEvent.event.data[0]) : 0;
+            txns.slice[i]['weight'] = extrinsicSuccessEvent ? Number(extrinsicSuccessEvent.event.data[0].weight) : 0;
         }
 
         return res.status(200).send(txns).end();
