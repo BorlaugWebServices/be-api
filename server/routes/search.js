@@ -19,7 +19,6 @@ router.get('/', async (req, res) => {
 
     calls.push(store.block.get(searchCriteria.trim()));
     calls.push(store.transaction.getTxnByAddress(0, 1, searchCriteria.trim()));
-    calls.push(store.lease.get(Number(searchCriteria.trim())));
     calls.push(store.audit.get(Number(searchCriteria.trim())));
     calls.push(store.transaction.get(searchCriteria.trim()));
     calls.push(store.inherent.get(searchCriteria.trim()));
@@ -30,8 +29,11 @@ router.get('/', async (req, res) => {
     calls.push(store.group.get(searchCriteria.trim()));
     calls.push(store.proposal.get(searchCriteria.trim()));
     calls.push(store.identity.get_catalog(searchCriteria.trim()));
+    calls.push(store.lease.getRegistry(searchCriteria.trim()));
+    calls.push(store.lease.getAsset(searchCriteria.trim()));
+    calls.push(store.lease.getLease(searchCriteria.trim()));
 
-    let [block, address, lease, audit, txn, inherent, event, log, identity, sequence, group, proposal, catalog] = await Promise.all(calls);
+    let [block, address, audit, txn, inherent, event, log, identity, sequence, group, proposal, catalog, asset_registry, asset, lease] = await Promise.all(calls);
 
     if (!block && (NUMBER_PATTERN.test(searchCriteria.trim()) || HASH_PATTERN.test(searchCriteria.trim()))) {
         debug("block sync request");
@@ -55,7 +57,9 @@ router.get('/', async (req, res) => {
         sequences: sequence ? [sequence] : [],
         groups: group ? [group] : [],
         proposals: proposal ? [proposal] : [],
-        catalogs: catalog ? [catalog] : []
+        catalogs: catalog ? [catalog] : [],
+        asset_registries: asset_registry ? [asset_registry] : [],
+        assets: asset ? [asset] : [],
     };
 
     return res.status(200).send(searchResult).end();

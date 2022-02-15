@@ -33,7 +33,7 @@ app.use("/transactions", transactions);
 app.use("/inherents", inherents);
 app.use("/events", events);
 app.use("/logs", logs);
-app.use("/leases", leases);
+app.use("/assetregistry", leases);
 app.use("/identities", identities);
 app.use("/audits", audits);
 app.use("/sequences", provenance);
