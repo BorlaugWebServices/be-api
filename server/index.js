@@ -24,7 +24,8 @@ const blocks = require("./routes/blocks"),
     provenance = require("./routes/provenance"),
     proposal = require("./routes/proposal"),
     groups = require("./routes/groups"),
-    account = require("./routes/account");
+    account = require("./routes/account"),
+    email = require("./routes/email");
 
 app.use("/", require("./routes"));
 app.use("/search", require("./routes/search"));
@@ -40,6 +41,7 @@ app.use("/sequences", provenance);
 app.use("/accounts", account);
 app.use("/proposals", proposal);
 app.use("/groups", groups);
+app.use("/email", email);
 
 app.use((err, req, res, next) => {
     res.status(err.status || 500);
