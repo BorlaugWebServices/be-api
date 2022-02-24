@@ -99,4 +99,104 @@ router.get('/:sequenceid/activities', async (req, res) => {
     }
 });
 
+router.get('/registries/:registryid', async (req, res) => {
+    let registryid = req.params.registryid;
+    debug(`GET - /sequences/registries/${registryid}`);
+
+    try {
+        const store = await config.dataStore.getStore();
+        let registry   = await store.provenance.getRegistry(registryid);
+        debug('Registry: ', registry);
+
+        return res.status(200).send(registry).end();
+    } catch(e) {
+        debug(e);
+        return res.status(200).send({
+            err: e,
+            msg: "Internal Server Error"
+        }).end();
+    }
+});
+
+router.get('/registries/:registryid/activities', async (req, res) => {
+    let registryid = req.params.registryid;
+    debug(`GET - sequences/registries/${registryid}/activities`);
+
+    try {
+        const store = await config.dataStore.getStore();
+
+        let activityKeys = await store.provenance.getRegistryActivities(registryid);
+        let activities   = activityKeys.length > 0 ? await store.transaction.getList(activityKeys) : [];
+
+        /**** TEST ****/
+        let calls = [];
+        activities.forEach(act => {
+            calls.push(transaction.getTransactionStatus(act));
+        });
+        let statuses = await Promise.all(calls);
+        activities.forEach((e, i, a) => {
+            a[i]["isSuccess"] = statuses[i];
+        });
+        /************/
+
+        return res.status(200).send(activities).end();
+    } catch(e) {
+        debug(e);
+        return res.status(500).send({
+            err: e.message,
+            msg: "Internal Server Error"
+        }).end();
+    }
+});
+
+router.get('/definitions/:definitionid', async (req, res) => {
+    let definitionid = req.params.definitionid;
+    debug(`GET - /sequences/definitions/${definitionid}`);
+
+    try {
+        const store = await config.dataStore.getStore();
+        let definition   = await store.provenance.getDefinition(definitionid);
+        debug('Definition: ', definition);
+
+        return res.status(200).send(definition).end();
+    } catch(e) {
+        debug(e);
+        return res.status(200).send({
+            err: e,
+            msg: "Internal Server Error"
+        }).end();
+    }
+});
+
+router.get('/definitions/:definitionid/activities', async (req, res) => {
+    let definitionid = req.params.definitionid;
+    debug(`GET - sequences/definitions/${definitionid}/activities`);
+
+    try {
+        const store = await config.dataStore.getStore();
+
+        let activityKeys = await store.provenance.getDefinitionActivities(definitionid);
+        let activities   = activityKeys.length > 0 ? await store.transaction.getList(activityKeys) : [];
+
+        /**** TEST ****/
+        let calls = [];
+        activities.forEach(act => {
+            calls.push(transaction.getTransactionStatus(act));
+        });
+        let statuses = await Promise.all(calls);
+        activities.forEach((e, i, a) => {
+            a[i]["isSuccess"] = statuses[i];
+        });
+        /************/
+
+        return res.status(200).send(activities).end();
+    } catch(e) {
+        debug(e);
+        return res.status(500).send({
+            err: e.message,
+            msg: "Internal Server Error"
+        }).end();
+    }
+});
+
 module.exports = router;

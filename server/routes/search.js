@@ -32,8 +32,10 @@ router.get('/', async (req, res) => {
     calls.push(store.lease.getRegistry(searchCriteria.trim()));
     calls.push(store.lease.getAsset(searchCriteria.trim()));
     calls.push(store.lease.getLease(searchCriteria.trim()));
+    calls.push(store.provenance.getRegistry(searchCriteria.trim()));
+    calls.push(store.provenance.getDefinition(searchCriteria.trim()));
 
-    let [block, address, audit, txn, inherent, event, log, identity, sequence, group, proposal, catalog, asset_registry, asset, lease] = await Promise.all(calls);
+    let [block, address, audit, txn, inherent, event, log, identity, sequence, group, proposal, catalog, asset_registry, asset, lease, registry, definition] = await Promise.all(calls);
 
     if (!block && (NUMBER_PATTERN.test(searchCriteria.trim()) || HASH_PATTERN.test(searchCriteria.trim()))) {
         debug("block sync request");
@@ -60,6 +62,8 @@ router.get('/', async (req, res) => {
         catalogs: catalog ? [catalog] : [],
         asset_registries: asset_registry ? [asset_registry] : [],
         assets: asset ? [asset] : [],
+        registries: registry ? [registry] : [],
+        definitions: definition ? [definition] : [],
     };
 
     return res.status(200).send(searchResult).end();
