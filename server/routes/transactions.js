@@ -26,16 +26,21 @@ router.route('/')
         for (let i = 0; i < txns.slice.length; i++) {
             let txhash = txns.slice[i].hash;
             let transaction = await store.transaction.get(txhash);
-            let events = await store.event.getList(transaction["events"]);
-            let depositEvent = _.find(events, (event) => {
-                return event.meta.name === "Deposit";
-            });
-            let extrinsicSuccessEvent = _.find(events, (event) => {
-                return event.meta.name === "ExtrinsicSuccess";
-            });
-            debug(extrinsicSuccessEvent.event.data)
-            txns.slice[i]['tx_fee'] = depositEvent ? Number(depositEvent.event.data[0]) : 0;
-            txns.slice[i]['weight'] = extrinsicSuccessEvent ? Number(extrinsicSuccessEvent.event.data[0].weight) : 0;
+            if(transaction["events"] && transaction["events"].length > 0) {
+                let events = await store.event.getList(transaction["events"]);
+                let depositEvent = _.find(events, (event) => {
+                    return event.meta.name === "Deposit";
+                });
+                let extrinsicSuccessEvent = _.find(events, (event) => {
+                    return event.meta.name === "ExtrinsicSuccess";
+                });
+                debug(extrinsicSuccessEvent.event.data)
+                txns.slice[i]['tx_fee'] = depositEvent ? Number(depositEvent.event.data[0]) : 0;
+                txns.slice[i]['weight'] = extrinsicSuccessEvent ? Number(extrinsicSuccessEvent.event.data[0].weight) : 0;
+            }else {
+                txns.slice[i]['tx_fee'] = 0;
+                txns.slice[i]['weight'] = 0;
+            }
         }
 
         return res.status(200).send(txns).end();
