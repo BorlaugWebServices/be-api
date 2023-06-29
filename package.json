@@ -4,7 +4,7 @@
   "description": "API to serve borlaug-explorer",
   "main": "index.js",
   "scripts": {
-    "start": "SET DEBUG=be-api:*,be-datastore:* & node bin/api.js",
+    "start": "DEBUG=be-api:*,be-datastore:* bin/api.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
