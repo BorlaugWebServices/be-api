@@ -21,151 +21,195 @@ const HASH_PATTERN: RegExp = /^0x([A-Fa-f0-9]{64})$/;
  * Get blocks paginated.
  */
 router.route('/')
-  .get(async (req: Request, res: Response) => {
-    debug("GET - /blocks");
-    const page: number = numeral(req.query.page || 1).value() || 1;
-    const perPage: number = numeral(req.query.perPage || 10).value() || 10;
+    .get(async (req: Request, res: Response) => {
+        debug("GET - /blocks");
+        const page: number = numeral(req.query.page || 1).value() || 1;
+        const perPage: number = numeral(req.query.perPage || 10).value() || 10;
 
-    const start: number = (page - 1) * perPage;
-    const end: number = start + perPage - 1;
-    let total: number = 0;
+        const start: number = (page - 1) * perPage;
+        const end: number = start + perPage - 1;
 
-    try {
-      const store = await dataStore.getStore();
-      total = await store.block.latestBlockNumber();
+        try {
+            const store = await dataStore.getStore();
+            const total = await store.block.latestBlockNumber();
 
-      const numbers: number[] = [];
-      const calls: Promise<BlockExpanded | null>[] = [];
+            const numbers: number[] = [];
+            const calls: Promise<BlockExpanded | null>[] = [];
 
-      for (let i = start; i <= end; i++) {
-        numbers.push(total - i);
-      }
+            for (let i = start; i <= end; i++) {
+                numbers.push(total - i);
+            }
 
-      let blocks = await store.block.getList(numbers.map(n => n.toString()));
+            let blocks: (BlockExpanded | null)[] = await store.block.getList(numbers.map(n => n.toString()));
 
-      // Identify missing blocks to sync
-      for (let i = 0; i < blocks.length; i++) {
-        if (!blocks[i]) {
-          calls.push(syncBlock(numbers[i]));
+            // Identify missing blocks to sync
+            for (let i = 0; i < blocks.length; i++) {
+                if (!blocks[i]) {
+                    calls.push(syncBlock(numbers[i]));
+                }
+            }
+
+            // Sync missing blocks
+            const syncedBlocks = await Promise.all(calls);
+
+            // Map synced blocks back into the main list
+            let syncIdx = 0;
+            blocks = blocks.map((block) => {
+                if (!block) {
+                    return syncedBlocks[syncIdx++];
+                }
+                return block;
+            });
+
+            // Filter out any that failed to sync
+            const finalBlocks = blocks.filter((block): block is BlockExpanded => block !== null);
+
+            return res.status(200).send({
+                total: total,
+                slice: finalBlocks
+            }).end();
+        } catch (e: any) {
+            debug(e);
+            return res.status(500).send({
+                err: e.message || e,
+                msg: "Internal Server Error"
+            }).end();
         }
-      }
+    })
+    .delete(async (req: Request, res: Response) => {
+        debug(`DELETE - /blocks ; secret=${req.body.secret}`);
 
-      // Sync missing blocks
-      const syncedBlocks = await Promise.all(calls);
-
-      // Map synced blocks back into the main list
-      let syncIdx = 0;
-      blocks = blocks.map((block) => {
-        if (!block) {
-          return syncedBlocks[syncIdx++];
+        if (cacheCleanupSecret === req.body.secret) {
+            const reply = await harvester.request('cleanup', {});
+            debug(reply);
+            return res.status(200).send({count: reply.result}).end();
+        } else {
+            return res.status(403).end();
         }
-        return block;
-      });
-
-      // Filter out any that failed to sync
-      const finalBlocks = blocks.filter((block): block is BlockExpanded => block !== null);
-
-      return res.status(200).send({
-        total: total,
-        slice: finalBlocks
-      }).end();
-    } catch (e: any) {
-      debug(e);
-      return res.status(500).send({
-        err: e.message || e,
-        msg: "Internal Server Error"
-      }).end();
-    }
-  })
-  .delete(async (req: Request, res: Response) => {
-    debug(`DELETE - /blocks ; secret=${req.body.secret}`);
-
-    if (cacheCleanupSecret === req.body.secret) {
-      const reply = await harvester.request('cleanup', {});
-      debug(reply);
-      return res.status(200).send({count: reply.result}).end();
-    } else {
-      return res.status(403).end();
-    }
-  });
+    });
 
 /**
  * Get a specific block
  */
 router.get('/:numberOrHash', async (req: Request, res: Response) => {
-  debug(`GET - /blocks/${req.params.numberOrHash}`);
-  const {numberOrHash} = req.params;
+    debug(`GET - /blocks/${req.params.numberOrHash}`);
+    const {numberOrHash} = req.params;
 
-  if (!NUMBER_PATTERN.test(numberOrHash) && !HASH_PATTERN.test(numberOrHash)) {
-    return res.status(404).send({msg: `Invalid block number or hash`}).end();
-  }
+    if (!NUMBER_PATTERN.test(numberOrHash) && !HASH_PATTERN.test(numberOrHash)) {
+        return res.status(404).send({msg: `Invalid block number or hash`}).end();
+    }
 
-  try {
-    const store = await dataStore.getStore();
-    let block = await store.block.get(numberOrHash);
-    if (!block) {
-      try {
-        block = await syncBlock(numberOrHash);
-      } catch (e) {
+    try {
+        const store = await dataStore.getStore();
+        let block = await store.block.get(numberOrHash);
+        if (!block) {
+            try {
+                block = await syncBlock(numberOrHash);
+            } catch (e) {
+                debug(e);
+                return res.status(500).send({
+                    err: "Harvester not running", msg: "Internal Server Error"
+                }).end();
+            }
+        }
+        if (block) {
+            return res.status(200).send(block).end();
+        } else {
+            return res.status(404).send({msg: `Block #${numberOrHash} not found`}).end();
+        }
+    } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
         debug(e);
         return res.status(500).send({
-          err: "Harvester not running", msg: "Internal Server Error"
+            err: errorMessage, msg: "Internal Server Error"
         }).end();
-      }
     }
-
-    if (block) {
-      return res.status(200).send(block).end();
-    } else {
-      return res.status(404).send({msg: `Block #${numberOrHash} not found`}).end();
-    }
-  } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : String(e);
-    debug(e);
-    return res.status(500).send({
-      err: errorMessage, msg: "Internal Server Error"
-    }).end();
-  }
 });
 
 /**
  * Get a specific block from chain
  */
 router.get('/:numberOrHash/sync', async (req: Request, res: Response) => {
-  debug(`GET - /:numberOrHash/${req.params.numberOrHash}/sync`);
-  const {numberOrHash} = req.params;
+    debug(`GET - /:numberOrHash/${req.params.numberOrHash}/sync`);
+    const {numberOrHash} = req.params;
 
-  if (!NUMBER_PATTERN.test(numberOrHash) && !HASH_PATTERN.test(numberOrHash)) {
-    return res.status(404).send({msg: `Invalid block number or hash`}).end();
-  }
-
-  try {
-    const block = await syncBlock(numberOrHash);
-    if (block) {
-      return res.status(200).send(block).end();
-    } else {
-      return res.status(404).send({msg: `Block #${numberOrHash} not found`}).end();
+    if (!NUMBER_PATTERN.test(numberOrHash) && !HASH_PATTERN.test(numberOrHash)) {
+        return res.status(404).send({msg: `Invalid block number or hash`}).end();
     }
-  } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : String(e);
-    debug(e);
-    return res.status(500).send({
-      err: errorMessage, msg: "Internal Server Error"
-    }).end();
-  }
+
+    try {
+        const block = await syncBlock(numberOrHash);
+        if (block) {
+            return res.status(200).send(block).end();
+        } else {
+            return res.status(404).send({msg: `Block #${numberOrHash} not found`}).end();
+        }
+    } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        debug(e);
+        return res.status(500).send({
+            err: errorMessage, msg: "Internal Server Error"
+        }).end();
+    }
 });
 
-async function syncBlock(numberOrHash: string | number) {
-  let block: BlockExpanded | null = null;
-  const reply = await harvester.request('syncBlock', {numberOrHash: numberOrHash});
-  if (reply && reply.result) {
-    try {
-      block = typeof reply.result === 'string' ? JSON.parse(reply.result) : reply.result;
-    } catch (e) {
-      debug("Failed to parse synced block", e);
+/**
+ * Cache all blocks
+ */
+router.post('/cache', async (req: Request, res: Response) => {
+    debug(`POST - /cache`);
+    const BATCH_SIZE = 100;
+    if (cacheCleanupSecret === req.body.secret) {
+        const maxSync = req.body.maxSync;
+        const store = await dataStore.getStore();
+        const total = await store.block.latestBlockNumber();
+
+        let newSynced = 0;
+        let failed = 0;
+        let alreadySynced = 0;
+        for (let i = 0; i < total && newSynced < maxSync; i += BATCH_SIZE) {
+            const currentBatch = [];
+            const end = Math.min(i + BATCH_SIZE, total);
+            const numbersToRequest = Array.from({length: end - i}, (_, index) => (i + index).toString());
+            const blocksInRange = await store.block.getList(numbersToRequest);
+            for (let blockNumber = i; blockNumber < end && newSynced < maxSync; blockNumber++) {
+                if (!blocksInRange.some(b => b.number === blockNumber)) {
+                    currentBatch.push(
+                        harvester.request('syncBlock', {numberOrHash: blockNumber})
+                            .catch(err => {
+                                failed++;
+                                debug(`Failed at block ${blockNumber}:`, err)
+                            })
+                    );
+                    newSynced++;
+                } else {
+                    alreadySynced++;
+                }
+            }
+            debug(`Syncing blocks ${i} to ${end - 1}...`);
+            await Promise.all(currentBatch);
+        }
+
+        return res.status(200).send({total, newSynced, failed, alreadySynced}).end();
+    } else {
+        return res.status(403).end();
     }
-  }
-  return block;
+});
+
+
+async function syncBlock(numberOrHash: string | number) {
+
+    let block: BlockExpanded | null = null;
+    const reply = await harvester.request('syncBlock', {numberOrHash: numberOrHash});
+    debug(reply);
+    if (reply && reply.result) {
+        try {
+            block = typeof reply.result === 'string' ? JSON.parse(reply.result) : reply.result;
+        } catch (e) {
+            debug(`Failed to parse synced block: ${e}`);
+        }
+    }
+    return block;
 }
 
 export default router;
