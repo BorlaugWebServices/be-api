@@ -158,7 +158,7 @@ router.get('/:numberOrHash/sync', async (req: Request, res: Response) => {
  */
 router.post('/cache', async (req: Request, res: Response) => {
     debug(`POST - /cache`);
-    const BATCH_SIZE = 100;
+    const BATCH_SIZE = 500;
     if (cacheCleanupSecret === req.body.secret) {
         const maxSync = req.body.maxSync;
         const store = await dataStore.getStore();
@@ -168,26 +168,27 @@ router.post('/cache', async (req: Request, res: Response) => {
         let failed = 0;
         let alreadySynced = 0;
         for (let i = 0; i < total && newSynced < maxSync; i += BATCH_SIZE) {
-            const currentBatch = [];
             const end = Math.min(i + BATCH_SIZE, total);
             const numbersToRequest = Array.from({length: end - i}, (_, index) => (i + index).toString());
             const blocksInRange = await store.block.getList(numbersToRequest);
             for (let blockNumber = i; blockNumber < end && newSynced < maxSync; blockNumber++) {
                 if (!blocksInRange.some(b => b.number === blockNumber)) {
-                    currentBatch.push(
-                        harvester.request('syncBlock', {numberOrHash: blockNumber})
-                            .catch(err => {
-                                failed++;
-                                debug(`Failed at block ${blockNumber}:`, err)
-                            })
-                    );
+                    try {
+                        const response = await harvester.request('syncBlock', {numberOrHash: blockNumber});
+                        if (!response || response.result == null) {
+                            failed++;
+                            debug(`Null result at block ${blockNumber}`);
+                        }
+                    } catch (err) {
+                        failed++;
+                        debug(`Failed at block ${blockNumber}:`, err);
+                    }
                     newSynced++;
                 } else {
                     alreadySynced++;
                 }
             }
             debug(`Syncing blocks ${i} to ${end - 1}...`);
-            await Promise.all(currentBatch);
         }
 
         return res.status(200).send({total, newSynced, failed, alreadySynced}).end();
@@ -201,7 +202,6 @@ async function syncBlock(numberOrHash: string | number) {
 
     let block: BlockExpanded | null = null;
     const reply = await harvester.request('syncBlock', {numberOrHash: numberOrHash});
-    debug(reply);
     if (reply && reply.result) {
         try {
             block = typeof reply.result === 'string' ? JSON.parse(reply.result) : reply.result;
