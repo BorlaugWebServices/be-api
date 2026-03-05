@@ -1,12 +1,13 @@
-FROM node:11.6.0
+FROM node:20
 
-COPY . /home/api
+WORKDIR /app
 
-WORKDIR "/home/api"
+COPY . .
 
-RUN npm install --silent
-RUN chmod +x ./bin/api.js
+RUN npm install
+RUN npm run build
 
 EXPOSE 3000
 
-CMD [ "npm", "start" ]
+CMD ["node", "dist/bin/api.js"]
+
